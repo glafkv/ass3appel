@@ -7,18 +7,47 @@
 #include <time.h>
 #include <assert.h>
 #include <signal.h>
+#include <errno.h>
 
+#define BUFF_SZ (sizeof(int) *2)
+int shmid;
+int *sharedNum1;
+int *sharedNum2;
 
+static void alarmHandler(int signo){
+	printf("seconds: %d milliseconds: %d\n", *sharedNum1, *sharedNum2);
+	shmdt(sharedNum1);
+	shmctl(shmid, IPC_RMID, NULL);
+	kill(0, SIGTERM);
+};
 int main(int argc, char *argv[]){
+	
+	signal(SIGALRM, alarmHandler);
+	alarm(2);
+	int num1 = 0;
+	int num2 = 0;
+	sharedNum1 = &num1;
+	sharedNum2 = &num2;
+	
+	//create shared key
+	key_t key;
+	key = ftok(".", 'A');
+	printf("key in master: %d\n", key);
+
+	pid_t pid = 0;
+	pid_t wpid;	
 	//assigning variables for getopt statement
 	int option;
+	char * logFile;
+	//assigning to the default values in case they're not specified
 	int totalSpawned = 5;
+	logFile = "logFile.txt";
+	int realTime = 0;
+	//flags for the getopt statement
 	int totalFlag = 0;
 	int logFlag = 0;
 	int timeFlag = 0;
-	char * logFile;
-	logFile = "logFile.txt";
-	int realTime = 0;
+	
 	while((option = getopt(argc, argv, "hslt:")) != -1)
 	{
 		switch(option){
@@ -33,12 +62,9 @@ int main(int argc, char *argv[]){
 				exit(0);
 			case 's':
 				totalFlag = 1;
-				//totalSpawned = atoi(argv[2]);
 				break;
 			case 'l':
 				logFlag = 1;
-				//logFile = argv[2];
-				//printf("%s \n", logFile);
 				break;
 			case 't':
 				timeFlag = 1;
@@ -51,20 +77,16 @@ int main(int argc, char *argv[]){
 			}
 	}
 	
-			
-	//if the user doesn't provide an argument then the default is chosen
 	
 	//if the user specifies the amount, set it to totalSpawned	
 	if(totalFlag == 1){
 		if(argc > 2){
 			totalSpawned = atoi(argv[2]);	
-			printf("%d %s\n", totalSpawned, logFile);
 		}
 	} //if the user specifies the file name, set it to logFile 
 	else if(logFlag == 1){
 		if(argc > 2){
 			logFile = argv[2];
-			printf("%d %s\n",totalSpawned, logFile);
 		}
 	}
 	//create the file and make sure it's a good file
@@ -74,6 +96,20 @@ int main(int argc, char *argv[]){
 		exit(EXIT_FAILURE);
 	}
 	fclose(ofPtr);
+	
+	//create the shared memory
+	shmid = shmget(key, BUFF_SZ, 0777 | IPC_CREAT);
+	printf("shmid from master: %d\n", shmid);
+	if(shmid == -1){
+		perror("shmget\n");
+		exit(1);
+	}
+	//create the shared integers
+	sharedNum1 = (int *) shmat(shmid, NULL, 0);
+	printf("value at shareNum1 %p\n", sharedNum1);
+	sharedNum2 = sharedNum1 + 1;
+
+
 	//variable for for loop
 	int i;
 	//loop to spawn child processes
@@ -84,7 +120,8 @@ int main(int argc, char *argv[]){
 			exit(0);
 		}
 		
-	}	
+	}
+	//loop will run up to the amount specified or defaulted	
 	for(i = 0; i < totalSpawned; i++)
 	wait(NULL);
 
