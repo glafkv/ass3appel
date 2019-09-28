@@ -50,43 +50,47 @@ int main(int argc, char *argv[]){
 				abort();
 			}
 	}
-	//if the logFlag is 1
-	//if they didn't provide an argument, set the outfile to logFile.txt else the filename is what they indicated		
 	
-		
+			
+	//if the user doesn't provide an argument then the default is chosen
+	
+	//if the user specifies the amount, set it to totalSpawned	
 	if(totalFlag == 1){
-		if(argc < 3){
-			totalSpawned = 5;
-			printf("%d \n", totalSpawned);
-		} else {
-			totalSpawned = atoi(argv[2]);
-			printf("%d \n", totalSpawned);
+		if(argc > 2){
+			totalSpawned = atoi(argv[2]);	
+			printf("%d %s\n", totalSpawned, logFile);
 		}
-	} else if(logFlag == 1){
-		if(argc < 3){
-			logFile = "logFile.txt";
-			FILE *ofPtr = fopen(logFile, "w");
-			if(ofPtr == NULL){
-				perror("oss.c: Error: ");
-				exit(EXIT_FAILURE);
-			}
-			fclose(ofPtr);
-		} else {
+	} //if the user specifies the file name, set it to logFile 
+	else if(logFlag == 1){
+		if(argc > 2){
 			logFile = argv[2];
-			FILE *ofPtr = fopen(logFile, "w");
-			if(ofPtr == NULL){
-				perror("oss.c: Error: ");
-				exit(EXIT_FAILURE);
-			}
-			fclose(ofPtr);
+			printf("%d %s\n",totalSpawned, logFile);
 		}
 	}
+	//create the file and make sure it's a good file
+	FILE *ofPtr = fopen(logFile, "w");
+	if(ofPtr == NULL){
+		perror("oss.c: Error: ");
+		exit(EXIT_FAILURE);
+	}
+	fclose(ofPtr);
+	//variable for for loop
+	int i;
+	//loop to spawn child processes
+	for(i = 0; i < totalSpawned; i++){
+		
+		if(fork() == 0){
+			printf("[son] pid %d from [parent] pid %d\n", getpid(), getppid());
+			exit(0);
+		}
+		
+	}	
+	for(i = 0; i < totalSpawned; i++)
+	wait(NULL);
+
+		
+		
 	
-		
-
-		
-
-
 
 
 
