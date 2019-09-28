@@ -1,7 +1,9 @@
 CC = gcc
 CFLAGS = -g
 TARGET = oss
-OBJS = oss.o user.o
+OBJS = oss.o
+LIBOBJS = user.o
+all: oss user
 .SUFFIXES: .c .o
 
 $(TARGET): $(OBJS)

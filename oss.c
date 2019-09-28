@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
 	int num2 = 0;
 	sharedNum1 = &num1;
 	sharedNum2 = &num2;
-	
+	char arg1[10];
 	//create shared key
 	key_t key;
 	key = ftok(".", 'A');
@@ -112,19 +112,28 @@ int main(int argc, char *argv[]){
 
 
 	//variable for for loop
-	int i;
+	int i, status;
 	//loop to spawn child processes
 	for(i = 0; i < totalSpawned; i++){
-		
-		if(fork() == 0){
+		if((pid = fork()) == -1){
+			perror("Failed to fork.\n");
+			exit(1);
+		}
+		else if(pid == 0){
+			execlp("./user", "./user", arg1, (char *) NULL);
+		}
+	}
+		/*if(fork() == 0){
 			printf("[son] pid %d from [parent] pid %d\n", getpid(), getppid());
 			exit(0);
-		}
+		}*/
 		
-	}
+	
 	//loop will run up to the amount specified or defaulted	
-	for(i = 0; i < totalSpawned; i++)
-	wait(NULL);
+	while((wpid = wait(&status)) > 0);
+	printf("total seconds: %d total milliseconds %d\n", *sharedNum1, *sharedNum2);
+	//for(i = 0; i < totalSpawned; i++)
+	//wait(NULL);
 
 		
 		
