@@ -8,6 +8,9 @@
 #include <assert.h>
 #include <signal.h>
 #include <errno.h>
+#include <sys/ipc.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define BUFF_SZ (sizeof(int) *2)
 int shmid;
@@ -110,23 +113,40 @@ int main(int argc, char *argv[]){
 	printf("value at shareNum1 %p\n", sharedNum1);
 	sharedNum2 = sharedNum1 + 1;
 
-
+	int counter = 1;
+	int totalCounter = 0;
 	//variable for for loop
 	int i, status;
+	int numChild = 20;
+	snprintf(arg1, 10, "%d", totalSpawned);
 	//loop to spawn child processes
-	for(i = 0; i < totalSpawned; i++){
-		if((pid = fork()) == -1){
-			perror("Failed to fork.\n");
-			exit(1);
+	if(totalSpawned <= numChild){
+		for(i = 0; i < totalSpawned; i++){
+			if((pid = fork()) == -1){
+				perror("Failed to fork.\n");
+				exit(1);
+			}
+			else if(pid == 0){
+				execlp("./user", "./user", arg1, (char *) NULL);
+			}
 		}
-		else if(pid == 0){
-			execlp("./user", "./user", arg1, (char *) NULL);
-		}
+	} else {
+		do{
+			if(counter == numChild){
+				wait(&status);
+				counter--;
+			}
+			if((pid = fork()) == -1){
+				perror("Failed to fork.\n");
+				exit(1);
+			} else if(pid == 0){
+				execlp("./user", "./user", arg1, (char *) NULL);
+			}
+			counter++;
+			totalCounter++;
+		} while(totalCounter < totalSpawned);
 	}
-		/*if(fork() == 0){
-			printf("[son] pid %d from [parent] pid %d\n", getpid(), getppid());
-			exit(0);
-		}*/
+		
 		
 	
 	//loop will run up to the amount specified or defaulted	

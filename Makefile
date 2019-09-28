@@ -1,17 +1,15 @@
 CC = gcc
 CFLAGS = -g
-TARGET = oss
-OBJS = oss.o
-LIBOBJS = user.o
+
 all: oss user
-.SUFFIXES: .c .o
 
-$(TARGET): $(OBJS)
-	$(CC) -o $@ $(OBJS)
+oss: oss.c
+	$(CC) -o oss oss.c
 
-.c.o:
-	$(CC) $(CLAGS) -c $<
+user: user.c
+	$(CC) -o user user.c
 
 .PHONY: clean
 clean:
-	/bin/rm -f *.txt *.o $(TARGET)
+	rm -rf *.o *~ oss
+	rm -rf *.o *~ user
