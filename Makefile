@@ -12,4 +12,4 @@ $(TARGET): $(OBJS)
 
 .PHONY: clean
 clean:
-	/bin/rm -f *.o $(TARGET)
+	/bin/rm -f *.txt *.o $(TARGET)
