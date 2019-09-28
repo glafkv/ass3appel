@@ -98,6 +98,7 @@ int main(int argc, char *argv[]){
 	fclose(ofPtr);
 	
 	//create the shared memory
+	//shmget returns an identifier in shmid
 	shmid = shmget(key, BUFF_SZ, 0777 | IPC_CREAT);
 	printf("shmid from master: %d\n", shmid);
 	if(shmid == -1){
@@ -128,7 +129,10 @@ int main(int argc, char *argv[]){
 		
 		
 	
-
+	//detach from shared memory
+	shmdt(sharedNum1);
+	//destroy shared memory
+	shmctl(shmid, IPC_RMID, NULL);
 
 
 
