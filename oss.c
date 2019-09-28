@@ -13,20 +13,29 @@
 #include <sys/wait.h>
 
 #define BUFF_SZ (sizeof(int) *2)
+
 int shmid;
 int *sharedNum1;
 int *sharedNum2;
 
-static void alarmHandler(int signo){
+/*static void alarmHandler(int signo){
 	printf("seconds: %d milliseconds: %d\n", *sharedNum1, *sharedNum2);
 	shmdt(sharedNum1);
 	shmctl(shmid, IPC_RMID, NULL);
 	kill(0, SIGTERM);
-};
+};*/
+void timer(int sig){
+	char end = 'n';
+	printf("timer expired. would you like to terminate? Y/N\n");
+	if(end == 'y' || end == 'Y'){
+		shmctl(shmid, IPC_RMID, NULL);
+		exit(1);
+	}
+}
 int main(int argc, char *argv[]){
 	
-	signal(SIGALRM, alarmHandler);
-	alarm(2);
+	//signal(SIGALRM, alarmHandler);
+	//alarm(2);
 	int num1 = 0;
 	int num2 = 0;
 	sharedNum1 = &num1;
@@ -45,7 +54,7 @@ int main(int argc, char *argv[]){
 	//assigning to the default values in case they're not specified
 	int totalSpawned = 5;
 	logFile = "logFile.txt";
-	int realTime = 0;
+	int realTime = 5;
 	//flags for the getopt statement
 	int totalFlag = 0;
 	int logFlag = 0;
@@ -91,6 +100,10 @@ int main(int argc, char *argv[]){
 		if(argc > 2){
 			logFile = argv[2];
 		}
+	} else if(timeFlag == 1){
+		if(argc > 2){
+			realTime = atoi(argv[2]);
+		}
 	}
 	//create the file and make sure it's a good file
 	FILE *ofPtr = fopen(logFile, "w");
@@ -119,8 +132,11 @@ int main(int argc, char *argv[]){
 	int i, status;
 	int numChild = 20;
 	snprintf(arg1, 10, "%d", totalSpawned);
+	time_t start;
+	start = time(NULL);
+	while(start < realTime){
 	//loop to spawn child processes
-	if(totalSpawned <= numChild){
+	if(totalSpawned < 100){
 		for(i = 0; i < totalSpawned; i++){
 			if((pid = fork()) == -1){
 				perror("Failed to fork.\n");
@@ -148,7 +164,7 @@ int main(int argc, char *argv[]){
 	}
 		
 		
-	
+	}
 	//loop will run up to the amount specified or defaulted	
 	while((wpid = wait(&status)) > 0);
 	printf("total seconds: %d total milliseconds %d\n", *sharedNum1, *sharedNum2);
