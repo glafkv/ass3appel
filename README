@@ -1,0 +1,15 @@
+Assignment 3
+By: Gabi Appel
+Due: 10/3/19
+
+Purpose:
+	Make us understand semaphores and parallel programming.
+
+How to run:
+	
+	make			//to compile
+	./oss -h		//to show the help menu
+	./oss -s <n>		//to specify the maximum amount of children. Default is 5.
+	./oss -l <filename>	//to specify a log file. Default is log.txt
+	./oss -t <x>		//to specify the amount of time the REAL clock should run
+	make clean		//to erase all the object and executable files
