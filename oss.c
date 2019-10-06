@@ -81,66 +81,9 @@ int main(int argc, char *argv[]){
 	
 	char childPid[10];
 	char childSeconds[10];
-	char childNano[10];
-	//signal(SIGALRM, alarmHandler);
-	//alarm(2);
-	//int num1 = 0;
-	//int num2 = 0;
-	//sharedNum1 = &num1;
-	//sharedNum2 = &num2;
-	//char arg1[10];
-	//create shared key
-	/*key_t key;
-	key = ftok(".", 'A');
-	printf("key in master: %d\n", key);
+	char childNano[10];	
 	
-	pid_t childpid = 0;
-	int i = 0, j = 0, done, shmid = 0, total = 0;
-	int array[2];
-	//pid_t wpid;	
-	//assigning variables for getopt statement
-	int option;
-	char * logFile;
-	//assigning to the default values in case they're not specified
-	int totalSpawned = 5;
-	logFile = "logFile.txt";
-	int realTime = 5;
-	//flags for the getopt statement
-	int totalFlag = 0;
-	int logFlag = 0;
-	int timeFlag = 0;*/
-	
-	/*while((option = getopt(argc, argv, "hslt:")) != -1)
-	{
-		switch(option){
-			
-			case 'h':
-				printf("\tI'm here to help\n");
-				printf("**********************\n");
-				printf("-h brings up the help message\n");
-				printf("-s <x> : specify the number of child processes spawned. The default is 5.\n");
-				printf("-l <filename> : specify the logfile you want to send information to.\n");	
-				printf("-t <z> : specify the time in real seconds when the master will terminate itself and all it's children.\n");
-				exit(0);
-			case 's':
-				x = atoi(optarg);
-				break;
-			case 'l':
-				filename = optarg;
-				strcpy(filename, ".txt");
-				break;
-			case 't':
-				z = atoi(optarg);
-				break;
-			case '?':
-				break;
-
-			default:
-				abort();
-			}
-	
-	}*/
-//	*output = fopen(*filename, "a");
+				
 	getOpt(argc, argv, &output, &option, &x, &z, &filename);	
 	createKeys(&key1, &key2, &key3);
 	createSharedMemory(&shmIntId, &shmMsgId, &semId, key1, key2, key3);
@@ -169,13 +112,6 @@ int main(int argc, char *argv[]){
 	shmctl(semId, IPC_RMID, NULL);
 	
 	fclose(output);
-
-	
-
-
-
-
-
 
 return 0;
 }
@@ -207,7 +143,11 @@ void getOpt(int argc, char *argv[], FILE **output, int *option, int *x, int *z, 
 	while((*option = getopt(argc, argv, "hs:l:t:")) != -1)
 		switch(*option){
 			case 'h':
-				printf("help\n");
+				printf("Help Menu\n");
+				printf("-h : brings up the help menu.\n");
+				printf("-s <x> : choose the maximum number of child processes spawned. The default is 5. \n");
+				printf("-l <filename> : choose the name of the log file. The default is 'logfile.txt'\n");
+				printf("-t <z> : choose the time in real seconds when the master will termindate itself and all children. The default is 2.\n");
 				exit(1);
 			case 's':
 				*x = atoi(optarg);
@@ -347,4 +287,6 @@ void ossCriticalSection(int **nano, int **seconds, sem_t *sem, char **shmMsg, ch
 		}
 		sem_post(sem);
 	}while(**seconds < 2);
+
+	cleanup(*seconds, *shmMsg, sem, shmIntId, shmMsgId, semId); 
 };
