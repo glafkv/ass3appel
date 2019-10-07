@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdbool.h>
 
-//driver functions
+//function prototypes
 void attachToSharedMemory(int **seconds, int **nano, sem_t **sem, char **shmMsg, int shmIntId, int shmMsgId, int semId);
 void getLocalTimes(int *localSecs, int *localNano, int *seconds, int *nano);
 int getRandNum(int *randNum, int *pid);
@@ -43,10 +43,13 @@ int main(int argc, char *argv[]){
 	int killSecs = 0;
 	int killNano = 0;
 	
+	//to see if we can break out of the critical section
 	bool jobDone = false;
 	
+	//using a random number generator to make sure we don't keep getting the same number for each process
 	pid_t pid = getpid();
 	
+	//grab the values passed to the program using execlp(). the argv[] are locations of the variables from the exec function
 	shmIntId = atoi(argv[1]);
 	shmMsgId = atoi(argv[2]);
 	semId = atoi(argv[3]);
@@ -56,9 +59,10 @@ int main(int argc, char *argv[]){
 	
 	//critical section
 	sem_wait(sem);
+	//child gets the timer values from the shared memory
 	getLocalTimes(&localSecs, &localNano, seconds, nano);
 	sem_post(sem);
-	
+	//functions to generate the termination time
 	sem_wait(sem);
 	getRandNum(&randNum, &pid);
 	sem_post(sem);
@@ -73,9 +77,9 @@ int main(int argc, char *argv[]){
 
 return 0;
 }
-
+//function to attach to shared memory
 void attachToSharedMemory(int **seconds, int **nano, sem_t **sem, char **shmMsg, int shmIntId, int shmMsgId, int semId){
-	
+	//attaches each pointer to a location in shared memory
 	if((*seconds = (int *)shmat(shmIntId, NULL, 0)) == (void *)-1){
 		fprintf(stderr, "%s\n", strerror(errno));
 	}
@@ -87,12 +91,15 @@ void attachToSharedMemory(int **seconds, int **nano, sem_t **sem, char **shmMsg,
 	if((*sem = (sem_t *)shmat(semId, NULL, 0)) == (void *)-1){
 		fprintf(stderr, "%s\n", strerror(errno));
 	}
+	//initialize the semaphore and point it to a location in shared memory
 	sem_init(*sem, 1, 1);
 };
 void getLocalTimes(int *localSecs, int *localNano, int *seconds, int *nano){
+	//gets the seconds and nanos from the shared memory and stores in local variables. the local variables create the values for process termination within the shared memory clock
 	*localSecs = seconds[0];
 	*localNano = nano[0];
 };
+//get the pid with a random number
 int getRandNum(int *randNum, int *pid){
 	srand((getpid()));
 	*randNum = ((random() % (1000000 - 1)) - 1);
@@ -100,6 +107,7 @@ int getRandNum(int *randNum, int *pid){
 };
 void getKillTime(int *localSecs, int *localNano, int *killSecs, int *killNano, int *randNum){
 	
+	//set the process termination time using the local variables
 	*killSecs = *localSecs;
 	*killNano = *localNano + *randNum;
 	
@@ -115,7 +123,7 @@ void getKillTime(int *localSecs, int *localNano, int *killSecs, int *killNano, i
 	}
 };
 void criticalSection(sem_t *sem, int *seconds, int *nano, int *killSecs, int *killNano, int *localSecs, int *localNano, pid_t *pid, char **shmMsg, bool *jobDone){
-	
+	//process will enter the critical section and compare its time with the time in the shared memory clock. if it is not the kill time, the child will signal the semaphore. then it will call the wait signal and check the shared memory clock again. if the kill timer is up, the the child will write a message over shared memory that the parent wil check. if shmMsg is empty, we will write to it, signal the semaphore and break out of the loop, otherwise it will wait until shmMsg is NULL, then write to it, and wait for the parent process to terminate it
 	while(1){
 		sem_wait(sem);
 		if((*seconds > *killSecs) || (*seconds >= *killSecs && *nano >= *killNano)){

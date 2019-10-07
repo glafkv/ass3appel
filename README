@@ -12,3 +12,9 @@ To run:
 	./oss -l <filename>	//to choose the name of the logfile. default is logfile.txt
 	./oss -t <z> 		//to choose the time in real seconds when the master will terminate itself and all the children
 	make clean		//to remove all the oject and executable files
+
+Problems:
+	I think I have a memory leak somewhere, but I can't seem to figure out where. 
+	When it seg faults, I used the command 'ipcrm -a' to delete all the shared memory, then I compiled it again using make and then ran it and it normally worked.
+	If that didn't work, I logged out and logged back in and tried again after the above.
+	Please see me if it doesn't work.
